@@ -25,6 +25,7 @@ def mongoScript(opts):
 var toDelete = {delete};
 s = db.getMongo().startSession();
 var juju = s.getDatabase("juju");
+var logs = s.getDatabase("logs");
 var collections = juju.getCollectionNames().sort();
 s.startTransaction()
 var out = {{}};
@@ -56,21 +57,32 @@ collections.forEach(function (name) {{
   }});
 
 
-  // Separetly record and handle globalRefcount and usermodelname documents
+  // Separately record and handle globalRefcount and usermodelname documents
 
-  var ref_count_id = "cloudModel#" + model.cloud;
-  out["globalRefcounts"] = juju.globalRefcounts.find({{"_id": ref_count_id}}).toArray();
+  var refCountId = "cloudModel#" + model.cloud;
+  out["globalRefcounts"] = juju.globalRefcounts.find({{"_id": refCountId}}).toArray();
 
-  var usermodelname_id = model.owner + ":" + model.name;
-  out["usermodelname"] = juju.usermodelname.find({{ "_id": usermodelname_id }}).toArray();
+  var usermodelnameId = model.owner + ":" + model.name;
+  out["usermodelname"] = juju.usermodelname.find({{ "_id": usermodelnameId }}).toArray();
 
   if (toDelete) {{
       // Decrement model cloud ref count
-      juju.globalRefcounts.update({{"_id": ref_count_id}}, {{"$inc": {{"refcount": -1}}}})
+      juju.globalRefcounts.update({{"_id": refCountId}}, {{"$inc": {{"refcount": -1}}}})
 
       //Remove usermodelname entry so the user can recreate the model later using the same name
-      juju.usermodelname.deleteOne({{ "_id": usermodelname_id }});
+      juju.usermodelname.deleteOne({{ "_id": usermodelnameId }});
   }}
+
+
+  // Cleanup model logs
+  var modelLogs = logs.getCollection("logs." + uuid);
+  if (modelLogs) {{
+      out["logs"] = modelLogs.find().toArray();
+      if (toDelete) {{
+          modelLogs.drop();
+      }}
+  }}
+
 
 
 s.commitTransaction()
