@@ -109,5 +109,5 @@ func main() {
 		modelSt.Release()
 		_, _ = statePool.Remove(modelUUID)
 	}()
-	checkErr("set model agent version", modelSt.RemoveDyingModel())
+	checkErr("delete dying model", modelSt.RemoveDyingModel())
 }
