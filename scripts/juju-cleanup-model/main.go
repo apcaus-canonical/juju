@@ -84,7 +84,7 @@ func getConfig(tag names.MachineTag) (agent.ConfigSetterWriter, error) {
 }
 
 func main() {
-	loggo.GetLogger("").SetLogLevel(loggo.TRACE)
+	loggo.GetLogger("").SetLogLevel(loggo.WARNING)
 	gnuflag.Usage = func() {
 		fmt.Printf("Usage: %s <model-uuid>\n", os.Args[0])
 		os.Exit(1)
